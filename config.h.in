@@ -1,0 +1,3 @@
+#ifdef DEBUG
+#include <QDebug>
+#endif

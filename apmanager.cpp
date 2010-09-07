@@ -1,22 +1,42 @@
 #include "apmanager.h"
-
-#include <QtGui/QLabel>
-#include <QtGui/QMenu>
-#include <QtGui/QMenuBar>
-#include <QtGui/QAction>
-
-apmanager::apmanager()
+#include "config.h"
+#include "ui_main.h"
+#include "apwizard.h"
+apmanager::apmanager() : QMainWindow(),ui(new Ui::main)
 {
-    QLabel* l = new QLabel( this );
-    l->setText( "Hello World!" );
-    setCentralWidget( l );
-    QAction* a = new QAction(this);
-    a->setText( "Quit" );
-    connect(a, SIGNAL(triggered()), SLOT(close()) );
-    menuBar()->addMenu( "File" )->addAction( a );
+  settings=new QSettings("apmanager","apmanager");
+  profiles=settings->value("profiles").toHash();
+  wizard=NULL;
+  ui->setupUi(this);
+  connect(ui->actionExit,SIGNAL(triggered(bool)),this,SLOT(aboutToQuit()));
+  connect(ui->newProfile,SIGNAL(released()),this,SLOT(newProfile()));
 }
 
-apmanager::~apmanager()
-{}
+apmanager::~apmanager(){
+  delete ui;
+}
+void apmanager::aboutToQuit(){
+  this->close();
+}
 
-#include "apmanager.moc"
+void apmanager::newProfile(){
+  if(wizard)
+    delete wizard;
+  wizard=new ApWizard();
+  connect(wizard,SIGNAL(finished(int)),this,SLOT(wizardFinished(int)));
+  wizard->show();
+}
+void apmanager::wizardFinished ( int result )
+{
+#ifdef DEBUG
+  qDebug()<< wizard->ui->wifi_driver->currentText();
+#endif
+}
+
+QHash< QString, QVariant > apmanager::getProfile ( const QString& name )
+{
+  return profiles.value(name).toHash();
+  
+}
+
+
